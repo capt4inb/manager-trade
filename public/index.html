@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bitunix Futures Dashboard</title>
+  <meta name="description" content="Dashboard quản lý giao dịch Futures trên Bitunix - Theo dõi vị thế, lệnh và số dư tài khoản theo thời gian thực."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M14 2L4 7.5V20.5L14 26L24 20.5V7.5L14 2Z" stroke="url(#grad)" stroke-width="2" fill="none"/>
+          <path d="M14 8L9 11V17L14 20L19 17V11L14 8Z" fill="url(#grad)"/>
+          <defs>
+            <linearGradient id="grad" x1="4" y1="2" x2="24" y2="26" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">BITUNIX</span>
+        <span class="brand-sub">Futures Pro</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-tab="overview" id="nav-overview">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Tổng quan
+      </button>
+      <button class="nav-item" data-tab="positions" id="nav-positions">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+          <polyline points="16 7 22 7 22 13"/>
+        </svg>
+        Vị thế mở
+      </button>
+      <button class="nav-item" data-tab="orders" id="nav-orders">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>
+        Lệnh chờ
+      </button>
+      <button class="nav-item" data-tab="history" id="nav-history">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="12 8 12 12 14 14"/>
+          <path d="M3.05 11A9 9 0 1012 21M3.05 11H7M3.05 11V7"/>
+        </svg>
+        Lịch sử lệnh
+      </button>
+      <button class="nav-item" data-tab="trades" id="nav-trades">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        Lịch sử giao dịch
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="connection-status" id="connection-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Đang kết nối...</span>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" onclick="refreshAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+        </svg>
+        Làm mới
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menu-toggle" onclick="toggleSidebar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="page-title" id="page-title">Tổng quan</div>
+      </div>
+      <div class="header-right">
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          LIVE
+        </div>
+        <div class="last-update" id="last-update">--:--:--</div>
+        <div class="auto-refresh-toggle">
+          <span>Tự động</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="auto-refresh" checked onchange="toggleAutoRefresh(this.checked)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <!-- TAB: Overview -->
+    <div class="tab-content active" id="tab-overview">
+      <!-- Account Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card loading" id="stat-balance">
+          <div class="stat-icon stat-icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-label">Số dư USDT</div>
+            <div class="stat-value" id="val-balance">--</div>
+            <div class="stat-sub" id="val-balance-sub">Khả dụng</div>
+          </div>
+        </div>
+        <div class="stat-card loading" id="stat-equity">
+          <div class="stat-icon stat-icon--purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+              <path d="M15 9l-3 3-3-3"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-label">Equity</div>
+            <div class="stat-value" id="val-equity">--</div>
+            <div class="stat-sub" id="val-equity-sub">Tổng tài sản</div>
+          </div>
+        </div>
+        <div class="stat-card loading" id="stat-pnl">
+          <div class="stat-icon stat-icon--green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+              <polyline points="17 6 23 6 23 12"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-label">Lãi/Lỗ chưa chốt</div>
+            <div class="stat-value" id="val-pnl">--</div>
+            <div class="stat-sub" id="val-pnl-sub">Unrealized PnL</div>
+          </div>
+        </div>
+        <div class="stat-card loading" id="stat-margin">
+          <div class="stat-icon stat-icon--orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-label">Margin sử dụng</div>
+            <div class="stat-value" id="val-margin">--</div>
+            <div class="stat-sub" id="val-margin-sub">Đã ký quỹ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary section -->
+      <div class="section-row">
+        <section class="panel panel--half">
+          <div class="panel-header">
+            <h2 class="panel-title">Vị thế đang mở</h2>
+            <span class="badge" id="badge-positions">0</span>
+          </div>
+          <div class="panel-body" id="overview-positions">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <span>Đang tải...</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel panel--half">
+          <div class="panel-header">
+            <h2 class="panel-title">Lệnh chờ khớp</h2>
+            <span class="badge badge--yellow" id="badge-orders">0</span>
+          </div>
+          <div class="panel-body" id="overview-orders">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <span>Đang tải...</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Recent trades -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Giao dịch gần đây</h2>
+          <button class="btn-link" onclick="switchTab('history')">Xem tất cả →</button>
+        </div>
+        <div class="panel-body" id="overview-trades">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Đang tải...</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB: Positions -->
+    <div class="tab-content" id="tab-positions">
+      <div class="tab-toolbar">
+        <div class="toolbar-left">
+          <h1 class="tab-heading">Vị thế Future đang mở</h1>
+        </div>
+        <div class="toolbar-right">
+          <input class="search-input" type="text" id="pos-search" placeholder="Tìm symbol..." oninput="filterPositions(this.value)"/>
+        </div>
+      </div>
+      <section class="panel">
+        <div class="table-wrapper" id="positions-table-wrapper">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Đang tải vị thế...</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB: Pending Orders -->
+    <div class="tab-content" id="tab-orders">
+      <div class="tab-toolbar">
+        <div class="toolbar-left">
+          <h1 class="tab-heading">Lệnh chờ khớp</h1>
+        </div>
+        <div class="toolbar-right">
+          <input class="search-input" type="text" id="ord-search" placeholder="Tìm symbol..." oninput="filterOrders(this.value)"/>
+        </div>
+      </div>
+      <section class="panel">
+        <div class="table-wrapper" id="orders-table-wrapper">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Đang tải lệnh chờ...</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB: Order History -->
+    <div class="tab-content" id="tab-history">
+      <div class="tab-toolbar">
+        <div class="toolbar-left">
+          <h1 class="tab-heading">Lịch sử lệnh</h1>
+        </div>
+        <div class="toolbar-right">
+          <input class="search-input" type="text" id="hist-search" placeholder="Tìm symbol..." oninput="filterHistory(this.value)"/>
+        </div>
+      </div>
+      <section class="panel">
+        <div class="table-wrapper" id="history-table-wrapper">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Đang tải lịch sử...</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB: Trade History -->
+    <div class="tab-content" id="tab-trades">
+      <div class="tab-toolbar">
+        <div class="toolbar-left">
+          <h1 class="tab-heading">Lịch sử giao dịch khớp lệnh</h1>
+        </div>
+        <div class="toolbar-right">
+          <input class="search-input" type="text" id="trade-search" placeholder="Tìm symbol..." oninput="filterTrades(this.value)"/>
+        </div>
+      </div>
+      <section class="panel">
+        <div class="table-wrapper" id="trades-table-wrapper">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <span>Đang tải giao dịch...</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Toast notification -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

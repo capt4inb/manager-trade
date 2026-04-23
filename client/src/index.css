@@ -1,0 +1,73 @@
+/* ============================================================
+   BITUNIX FUTURES DASHBOARD — GLOBAL CSS
+   ============================================================ */
+:root {
+  --bg:          #0b0d1a;
+  --bg2:         #10132b;
+  --bg3:         #141830;
+  --card:        rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --card-hover:  rgba(255,255,255,0.07);
+
+  --purple:      #7c3aed;
+  --purple-light:#a78bfa;
+  --indigo:      #6366f1;
+  --indigo-light:#818cf8;
+  --pink:        #ec4899;
+
+  --green:       #10b981;
+  --green-dim:   rgba(16,185,129,0.15);
+  --red:         #ef4444;
+  --red-dim:     rgba(239,68,68,0.15);
+  --yellow:      #f59e0b;
+  --yellow-dim:  rgba(245,158,11,0.12);
+  --blue:        #3b82f6;
+  --blue-dim:    rgba(59,130,246,0.12);
+
+  --text:        #e2e8f0;
+  --text2:       #94a3b8;
+  --text3:       #475569;
+
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+button { font-family: var(--sans); cursor: pointer; border: none; outline: none; }
+input  { font-family: var(--sans); }
+
+/* Gradient text */
+.grad {
+  background: linear-gradient(135deg, var(--indigo-light), var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animations */
+@keyframes spin   { to { transform: rotate(360deg); } }
+@keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes glow {
+  0%,100% { box-shadow: 0 0 10px rgba(99,102,241,0.3); }
+  50%     { box-shadow: 0 0 24px rgba(99,102,241,0.6); }
+}
