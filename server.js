@@ -79,7 +79,7 @@ async function callBitunix(method, endpoint, queryParams = {}, body = null) {
 // Account
 app.get('/api/account', async (req, res) => {
   try {
-    const data = await callBitunix('GET', '/api/v1/futures/account', {});
+    const data = await callBitunix('GET', '/api/v1/futures/account', { marginCoin: 'USDT' });
     res.json(data);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

@@ -20,7 +20,7 @@ const pnlFmt = v => {
   return (n > 0 ? '+' : '') + fmt(v, 2)
 }
 
-export default function PositionsPage({ positions, onRefresh }) {
+export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
   const [search, setSearch] = useState('')
   const [loadingAction, setLoadingAction] = useState(null)
   const [selectedChart, setSelectedChart] = useState(null)
@@ -118,7 +118,7 @@ export default function PositionsPage({ positions, onRefresh }) {
                       </td>
                       <td>{fmt(p.qty)}</td>
                       <td>{fmt(p.avgOpenPrice)}</td>
-                      <td>{fmt(p.markPrice)}</td>
+                      <td>{fmt(p.markPrice ?? tickers[p.symbol])}</td>
                       <td className={pnlCls(pnl)}>
                         {pnlFmt(pnl)} USDT ({roe}%)
                       </td>

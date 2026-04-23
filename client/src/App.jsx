@@ -29,6 +29,7 @@ export default function App() {
   const [account,   setAccount]   = useState(null)
   const [positions, setPositions] = useState([])
   const [orders,    setOrders]    = useState([])
+  const [tickers,   setTickers]   = useState({})
   const [history,   setHistory]   = useState([])
   const [trades,    setTrades]    = useState([])
   const [connected, setConnected] = useState(null)
@@ -44,12 +45,13 @@ export default function App() {
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [accRes, posRes, ordRes, histRes, tradesRes] = await Promise.allSettled([
+      const [accRes, posRes, ordRes, histRes, tradesRes, tickRes] = await Promise.allSettled([
         fetch('/api/account').then(r => r.json()),
         fetch('/api/positions').then(r => r.json()),
         fetch('/api/orders/pending').then(r => r.json()),
         fetch('/api/orders/history').then(r => r.json()),
         fetch('/api/trades/history').then(r => r.json()),
+        fetch('/api/tickers').then(r => r.json()),
       ])
 
       if (accRes.status === 'fulfilled' && accRes.value?.code === 0) {
@@ -80,6 +82,13 @@ export default function App() {
       if (tradesRes.status === 'fulfilled' && tradesRes.value?.code === 0) {
         const list = tradesRes.value.data?.tradeList ?? tradesRes.value.data ?? []
         setTrades(Array.isArray(list) ? list : [])
+      }
+
+      if (tickRes && tickRes.status === 'fulfilled' && tickRes.value?.code === 0) {
+        const tickMap = {}
+        const list = tickRes.value.data || []
+        list.forEach(t => { tickMap[t.symbol] = t.lastPrice })
+        setTickers(tickMap)
       }
 
       setLastUpdate(new Date().toLocaleTimeString('vi-VN'))
@@ -222,7 +231,7 @@ export default function App() {
 
           {/* Tab pages */}
           {tab === 'positions' && (
-            <PositionsPage positions={positions} onRefresh={fetchAll} />
+            <PositionsPage positions={positions} tickers={tickers} onRefresh={fetchAll} />
           )}
           {tab === 'orders' && (
             <OrdersPage orders={orders} />
