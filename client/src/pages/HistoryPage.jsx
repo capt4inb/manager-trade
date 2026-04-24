@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { IconClock, IconList } from '../components/Icons'
 
 const fmt = (n, d = 2) => {
   const num = parseFloat(n)
@@ -6,121 +7,95 @@ const fmt = (n, d = 2) => {
   return num.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
+const HistoryCard = ({ title, sub, rightTop, rightBottom, side, status, time, type }) => (
+  <div className="list-item" style={{ cursor: 'default' }}>
+    <div className="item-left">
+      <div className="item-icon" style={{ background: side === 'BUY' ? 'var(--green-dim)' : 'var(--red-dim)', color: side === 'BUY' ? 'var(--green)' : 'var(--red)' }}>
+        {side === 'BUY' ? 'L' : 'S'}
+      </div>
+      <div>
+        <div className="item-name">{title} <span style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-gray)' }}>{type}</span></div>
+        <div className="item-sub">{time}</div>
+      </div>
+    </div>
+    <div className="item-right">
+      <div className="item-price" style={{ color: rightTop.includes('+') ? 'var(--green)' : rightTop.includes('-') ? 'var(--red)' : 'var(--text-dark)' }}>{rightTop}</div>
+      <div className="item-sub" style={{ textAlign: 'right' }}>{rightBottom}</div>
+      {status && (
+        <div className={`badge ${status === 'FILLED' ? 'b-filled' : 'b-cancel'}`} style={{ marginTop: '4px' }}>
+          {status}
+        </div>
+      )}
+    </div>
+  </div>
+)
+
 export default function HistoryPage({ history, trades }) {
   const [subTab, setSubTab] = useState('trades') // 'orders' or 'trades'
 
   return (
     <div className="tab-page">
-      <div className="section-head">
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <h2 
-            className={`section-title ${subTab === 'trades' ? '' : 'dim'}`} 
-            style={{ cursor: 'pointer' }}
-            onClick={() => setSubTab('trades')}
-          >
-            Lịch sử khớp lệnh
-          </h2>
-          <h2 
-            className={`section-title ${subTab === 'orders' ? '' : 'dim'}`} 
-            style={{ cursor: 'pointer' }}
-            onClick={() => setSubTab('orders')}
-          >
-            Lịch sử lệnh
-          </h2>
-        </div>
+      <div className="toggle-group">
+        <button 
+          className={`toggle-btn ${subTab === 'trades' ? 'active buy' : ''}`}
+          onClick={() => setSubTab('trades')}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+        >
+          <IconClock style={{ width: 16, height: 16 }} />
+          Khớp lệnh
+        </button>
+        <button 
+          className={`toggle-btn ${subTab === 'orders' ? 'active buy' : ''}`}
+          onClick={() => setSubTab('orders')}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+        >
+          <IconList style={{ width: 16, height: 16 }} />
+          Lịch sử lệnh
+        </button>
       </div>
 
-      <div className="panel">
-        <div className="tbl-scroll">
-          {subTab === 'trades' ? (
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Hướng</th>
-                  <th>Số lượng</th>
-                  <th>Giá khớp</th>
-                  <th>Lãi/Lỗ</th>
-                  <th>Phí</th>
-                  <th>Thời gian</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trades.length === 0 ? (
-                  <tr><td colSpan="7" className="center-state">Không có lịch sử khớp lệnh</td></tr>
-                ) : (
-                  trades.map((t, idx) => {
-                    const pnl = parseFloat(t.realizedPNL ?? t.profit ?? 0)
-                    return (
-                      <tr key={idx}>
-                        <td className="sans" style={{ fontWeight: 700 }}>{t.symbol}</td>
-                        <td>
-                          <span className={`badge ${(t.side || '').toUpperCase() === 'BUY' ? 'b-long' : 'b-short'}`}>
-                            {(t.side || '').toUpperCase()}
-                          </span>
-                        </td>
-                        <td>{fmt(t.qty ?? t.size, 4)}</td>
-                        <td>{fmt(t.price ?? t.tradePrice ?? t.avgFillPrice, 4)}</td>
-                        <td className={pnl > 0 ? 'green' : pnl < 0 ? 'red' : ''}>
-                          {pnl > 0 ? '+' : ''}{fmt(pnl)}
-                        </td>
-                        <td className="dim">{fmt(t.fee ?? t.tradeFee, 4)}</td>
-                        <td className="dim" style={{ fontSize: '11px' }}>
-                          {new Date(Number(t.createTime || t.tradeTime)).toLocaleString('vi-VN')}
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+      <div className="list-container" style={{ marginTop: '10px' }}>
+        {subTab === 'trades' ? (
+          trades.length === 0 ? (
+            <div className="center-state">Không có lịch sử khớp lệnh</div>
           ) : (
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Hướng</th>
-                  <th>Loại</th>
-                  <th>Số lượng</th>
-                  <th>Giá</th>
-                  <th>Giá TB</th>
-                  <th>Đã khớp</th>
-                  <th>Trạng thái</th>
-                  <th>Thời gian</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.length === 0 ? (
-                  <tr><td colSpan="7" className="center-state">Không có lịch sử lệnh</td></tr>
-                ) : (
-                  history.map((o, idx) => (
-                    <tr key={o.orderId || idx}>
-                      <td className="sans" style={{ fontWeight: 700 }}>{o.symbol}</td>
-                      <td>
-                        <span className={`badge ${(o.side || '').toUpperCase() === 'BUY' ? 'b-long' : 'b-short'}`}>
-                          {(o.side || '').toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="dim">{o.orderType || 'LIMIT'}</td>
-                      <td>{fmt(o.qty ?? o.size, 4)}</td>
-                      <td>{fmt(o.price, 4)}</td>
-                      <td>{fmt(o.avgPrice ?? o.avgFillPrice, 4)}</td>
-                      <td>{fmt(o.filledQty ?? o.executedQty ?? 0, 4)}</td>
-                      <td>
-                        <span className={`badge ${o.status === 'FILLED' ? 'b-filled' : 'b-cancel'}`}>
-                          {o.status}
-                        </span>
-                      </td>
-                      <td className="dim" style={{ fontSize: '11px' }}>
-                        {new Date(Number(o.createTime || o.ctime)).toLocaleString('vi-VN')}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
+            trades.map((t, idx) => {
+              const pnl = parseFloat(t.realizedPNL ?? t.profit ?? 0)
+              const side = (t.side || '').toUpperCase()
+              return (
+                <HistoryCard 
+                  key={idx}
+                  title={t.symbol}
+                  type={side}
+                  side={side}
+                  time={new Date(Number(t.createTime || t.tradeTime)).toLocaleString('vi-VN')}
+                  rightTop={pnl !== 0 ? `${pnl > 0 ? '+' : ''}${fmt(pnl)} USDT` : `${fmt(t.price ?? t.tradePrice ?? t.avgFillPrice, 4)}`}
+                  rightBottom={`Qty: ${fmt(t.qty ?? t.size, 4)}`}
+                />
+              )
+            })
+          )
+        ) : (
+          history.length === 0 ? (
+            <div className="center-state">Không có lịch sử lệnh</div>
+          ) : (
+            history.map((o, idx) => {
+              const side = (o.side || '').toUpperCase()
+              return (
+                <HistoryCard 
+                  key={o.orderId || idx}
+                  title={o.symbol}
+                  type={o.orderType || 'LIMIT'}
+                  side={side}
+                  status={o.status}
+                  time={new Date(Number(o.createTime || o.ctime)).toLocaleString('vi-VN')}
+                  rightTop={`${fmt(o.price, 4)} USDT`}
+                  rightBottom={`Filled: ${fmt(o.filledQty ?? o.executedQty ?? 0, 4)}/${fmt(o.qty ?? o.size, 4)}`}
+                />
+              )
+            })
+          )
+        )}
       </div>
     </div>
   )

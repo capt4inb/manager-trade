@@ -16,10 +16,23 @@ const fmtVol = (n) => {
   return num.toFixed(2)
 }
 
+const CoinIcon = ({ symbol }) => {
+  const coin = symbol.replace('USDT', '').toLowerCase()
+  return (
+    <div className="item-icon round">
+      <img 
+        src={`https://bin.bnbstatic.com/static/assets/logos/${coin}.png`} 
+        onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${coin}&background=random` }}
+        alt={coin}
+      />
+    </div>
+  )
+}
+
 export default function MarketPage({ marketData }) {
   const [search, setSearch] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: 'quoteVol', direction: 'desc' })
-
+  
   // Trade Modal State
   const [tradeModal, setTradeModal] = useState(null)
   const [orderType, setOrderType] = useState('MARKET')
@@ -28,9 +41,9 @@ export default function MarketPage({ marketData }) {
   const [leverage, setLeverage] = useState(10)
   const [isTrading, setIsTrading] = useState(false)
 
-  const openTradeModal = (m) => {
+  const openTradeModal = (m, side = 'BUY') => {
     const price = m.lastPrice ?? m.last ?? 0
-    setTradeModal({ symbol: m.symbol, price })
+    setTradeModal({ symbol: m.symbol, price, defaultSide: side })
     setLimitPrice(price)
     setOrderType('MARKET')
     setMargin('')
@@ -114,171 +127,146 @@ export default function MarketPage({ marketData }) {
     (m.symbol || '').toLowerCase().includes(search.toLowerCase())
   )
 
-  const SortIcon = ({ column }) => {
-    if (sortConfig.key !== column) return <span style={{ opacity: 0.3, marginLeft: 4 }}>↕</span>
-    return <span style={{ marginLeft: 4 }}>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-  }
-
   return (
-    <div className="tab-page">
-      <div className="section-head">
-        <h2 className="section-title">
-          Top 50 Thị Trường (Volume)
-        </h2>
-        <div className="section-actions">
-          <input
-            className="search-box"
-            placeholder="Tìm symbol..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
+    <div>
+      <input
+        className="search-box"
+        placeholder="Tìm symbol..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+
+      <div className="filter-tabs">
+        {[
+          { key: 'symbol', label: 'Tên' },
+          { key: 'lastPrice', label: 'Giá' },
+          { key: 'change', label: 'Biến động' },
+          { key: 'quoteVol', label: 'Volume' }
+        ].map(s => (
+          <button 
+            key={s.key}
+            className={sortConfig.key === s.key ? 'active' : ''}
+            onClick={() => handleSort(s.key)}
+          >
+            {s.label} {sortConfig.key === s.key && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+          </button>
+        ))}
       </div>
 
-      <div className="panel">
-        <div className="tbl-scroll">
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('symbol')}>Symbol <SortIcon column="symbol"/></th>
-                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('lastPrice')}>Giá hiện tại <SortIcon column="lastPrice"/></th>
-                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('change')}>24h Thay đổi <SortIcon column="change"/></th>
-                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('high')}>24h Cao nhất <SortIcon column="high"/></th>
-                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('low')}>24h Thấp nhất <SortIcon column="low"/></th>
-                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('quoteVol')}>Volume (USDT) <SortIcon column="quoteVol"/></th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan="8" className="center-state">
-                    Đang tải dữ liệu hoặc không có kết quả
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((m, idx) => {
-                  const open = parseFloat(m.open || 0)
-                  const last = parseFloat(m.last || m.lastPrice || 0)
-                  const change = open > 0 ? ((last - open) / open) * 100 : 0
-                  
-                  return (
-                    <tr key={m.symbol}>
-                      <td className="dim">{idx + 1}</td>
-                      <td className="sans" style={{ fontWeight: 700 }}>{m.symbol}</td>
-                      <td>{fmt(last, 6)}</td>
-                      <td className={change > 0 ? 'green' : change < 0 ? 'red' : ''}>
-                        {change > 0 ? '+' : ''}{change.toFixed(2)}%
-                      </td>
-                      <td className="dim">{fmt(m.high, 6)}</td>
-                      <td className="dim">{fmt(m.low, 6)}</td>
-                      <td className="sans">{fmtVol(m.quoteVol)}</td>
-                      <td>
-                        <button 
-                          className="btn-be" 
-                          style={{ background: 'rgba(16, 185, 129, 0.15)', borderColor: 'rgba(16, 185, 129, 0.4)', color: '#10b981' }}
-                          onClick={() => openTradeModal(m)}
-                        >
-                          Trade
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="list-container">
+        {filtered.length === 0 ? (
+          <div className="center-state">Không có kết quả</div>
+        ) : (
+          filtered.map(m => {
+            const open = parseFloat(m.open || 0)
+            const last = parseFloat(m.last || m.lastPrice || 0)
+            const change = open > 0 ? ((last - open) / open) * 100 : 0
+            
+            return (
+              <div className="list-item" key={m.symbol} onClick={() => openTradeModal(m, 'BUY')}>
+                <div className="item-left">
+                  <CoinIcon symbol={m.symbol} />
+                  <div>
+                    <div className="item-name">{m.symbol.replace('USDT', '')}</div>
+                    <div className="item-sub">Vol {fmtVol(m.quoteVol)}</div>
+                  </div>
+                </div>
+                
+                <div className="item-right">
+                  <div className="item-price">$ {fmt(last, last < 1 ? 4 : 2)}</div>
+                  <div className={`item-change ${change >= 0 ? 'green' : 'red'}`}>
+                    {change > 0 ? '+' : ''}{change.toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
       </div>
 
       {/* Trade Modal */}
       {tradeModal && (
-        <div className="modal-overlay" style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-          background: 'rgba(0,0,0,0.7)', zIndex: 1000, 
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div className="panel" style={{ width: '350px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 'bold' }}>Trade {tradeModal.symbol}</h2>
-              <button className="btn-link" onClick={() => setTradeModal(null)}>✕</button>
-            </div>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-title">Trade {tradeModal.symbol}</div>
             
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#94a3b8' }}>Loại lệnh</label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button 
-                  style={{ flex: 1, padding: '8px', background: orderType === 'MARKET' ? '#3b82f6' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  onClick={() => setOrderType('MARKET')}
-                >Market</button>
-                <button 
-                  style={{ flex: 1, padding: '8px', background: orderType === 'LIMIT' ? '#3b82f6' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  onClick={() => setOrderType('LIMIT')}
-                >Limit</button>
-              </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button 
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', fontWeight: '600', 
+                         background: orderType === 'MARKET' ? 'var(--primary)' : 'var(--bg-light)', 
+                         color: orderType === 'MARKET' ? '#fff' : 'var(--text-gray)', border: 'none' }}
+                onClick={() => setOrderType('MARKET')}
+              >Market</button>
+              <button 
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', fontWeight: '600', 
+                         background: orderType === 'LIMIT' ? 'var(--primary)' : 'var(--bg-light)', 
+                         color: orderType === 'LIMIT' ? '#fff' : 'var(--text-gray)', border: 'none' }}
+                onClick={() => setOrderType('LIMIT')}
+              >Limit</button>
             </div>
 
             {orderType === 'LIMIT' && (
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#94a3b8' }}>Giá Limit (USDT)</label>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'var(--text-gray)', fontWeight: '500' }}>Giá Limit (USDT)</label>
                 <input 
-                  type="number" className="search-box" style={{ width: '100%', boxSizing: 'border-box' }}
+                  type="number" className="search-box" style={{ marginBottom: 0 }}
                   value={limitPrice} onChange={e => setLimitPrice(e.target.value)}
                 />
               </div>
             )}
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: '#94a3b8' }}>
-                <span>Đòn bẩy hiện tại ({leverage}x)</span>
-                <span style={{ color: leverage > 50 ? '#ef4444' : '#3b82f6' }}>{leverage > 50 ? 'Rủi ro cao' : ''}</span>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', color: 'var(--text-gray)', fontWeight: '500' }}>
+                <span>Đòn bẩy ({leverage}x)</span>
+                <span style={{ color: leverage > 50 ? 'var(--red)' : 'var(--primary)' }}>{leverage > 50 ? 'Rủi ro cao' : ''}</span>
               </label>
               <input 
                 type="range" min="1" max="125" step="1" 
                 value={leverage} onChange={e => setLeverage(e.target.value)}
-                style={{ width: '100%', cursor: 'pointer', accentColor: leverage > 50 ? '#ef4444' : '#3b82f6' }}
+                style={{ width: '100%', cursor: 'pointer', accentColor: leverage > 50 ? 'var(--red)' : 'var(--primary)' }}
               />
-              <div style={{ display: 'flex', gap: '5px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                 {[10, 20, 50, 100].map(x => (
                   <button 
                     key={x}
-                    style={{ flex: 1, padding: '4px', fontSize: '11px', background: leverage == x ? '#3b82f6' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    style={{ flex: 1, padding: '6px', fontSize: '12px', fontWeight: '600', borderRadius: '6px',
+                             background: leverage == x ? 'var(--primary-dim)' : 'var(--bg-light)', 
+                             color: leverage == x ? 'var(--primary)' : 'var(--text-gray)', border: 'none' }}
                     onClick={() => setLeverage(x)}
                   >{x}x</button>
                 ))}
               </div>
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#94a3b8' }}>Ký quỹ / Margin (USDT)</label>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'var(--text-gray)', fontWeight: '500' }}>Ký quỹ / Margin (USDT)</label>
               <input 
-                type="number" className="search-box" style={{ width: '100%', boxSizing: 'border-box', fontSize: '16px', padding: '10px' }} placeholder="Ví dụ: 10"
+                type="number" className="search-box" style={{ marginBottom: 0, fontSize: '16px', fontWeight: '600' }} placeholder="Ví dụ: 10"
                 value={margin} onChange={e => setMargin(e.target.value)}
               />
             </div>
 
-            <div style={{ marginBottom: '20px', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '4px', fontSize: '12px', color: '#94a3b8' }}>
-              Quy mô vị thế ước tính: <strong style={{ color: '#fff' }}>{margin && leverage ? (parseFloat(margin) * parseFloat(leverage)).toFixed(2) : '0'} USDT</strong>
+            <div style={{ marginBottom: '20px', padding: '12px', background: 'var(--bg-light)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-gray)', textAlign: 'center' }}>
+              Quy mô vị thế ước tính: <strong style={{ color: 'var(--text-dark)', fontSize: '15px' }}>{margin && leverage ? (parseFloat(margin) * parseFloat(leverage)).toFixed(2) : '0'} USDT</strong>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
               <button 
                 disabled={isTrading}
-                style={{ flex: 1, padding: '12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: isTrading ? 'not-allowed' : 'pointer', opacity: isTrading ? 0.7 : 1 }}
+                style={{ flex: 1, padding: '14px', background: 'var(--green)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: isTrading ? 'not-allowed' : 'pointer', opacity: isTrading ? 0.7 : 1, boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
                 onClick={() => handleTrade('BUY')}
-              >
-                Mở LONG
-              </button>
+              >Mở LONG</button>
               <button 
                 disabled={isTrading}
-                style={{ flex: 1, padding: '12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: isTrading ? 'not-allowed' : 'pointer', opacity: isTrading ? 0.7 : 1 }}
+                style={{ flex: 1, padding: '14px', background: 'var(--red)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: isTrading ? 'not-allowed' : 'pointer', opacity: isTrading ? 0.7 : 1, boxShadow: '0 4px 12px rgba(239,68,68,0.3)' }}
                 onClick={() => handleTrade('SELL')}
-              >
-                Mở SHORT
-              </button>
+              >Mở SHORT</button>
             </div>
+            
+            <button 
+              style={{ width: '100%', padding: '12px', marginTop: '12px', background: 'none', border: 'none', color: 'var(--text-gray)', fontWeight: '600', cursor: 'pointer' }}
+              onClick={() => setTradeModal(null)}
+            >Hủy bỏ</button>
           </div>
         </div>
       )}
