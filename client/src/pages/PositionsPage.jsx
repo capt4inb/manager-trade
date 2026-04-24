@@ -125,48 +125,6 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
                             BE
                           </button>
                           
-                          {/* Quick TP Buttons: Sets TP at +10% and +20% ROI */}
-                          <button
-                            className="btn-tp"
-                            disabled={isBusy}
-                            onClick={() => {
-                              const entry = parseFloat(p.avgOpenPrice ?? p.entryPrice ?? p.avgPrice ?? p.openPrice)
-                              const lev = parseFloat(p.leverage)
-                              // TP Price calculation for 10% ROE
-                              // ROE = ((Price - Entry) / Entry) * Lev
-                              // Price = Entry * (1 + ROE/Lev)
-                              const tpPrice = side === 'BUY' 
-                                ? entry * (1 + 0.1 / lev) 
-                                : entry * (1 - 0.1 / lev)
-                              handleAction('tp', {
-                                positionId: p.positionId,
-                                symbol: p.symbol,
-                                takeProfitPrice: tpPrice.toFixed(6)
-                              })
-                            }}
-                          >
-                            TP 10%
-                          </button>
-
-                          <button
-                            className="btn-tp"
-                            disabled={isBusy}
-                            onClick={() => {
-                              const entry = parseFloat(p.avgOpenPrice ?? p.entryPrice ?? p.avgPrice ?? p.openPrice)
-                              const lev = parseFloat(p.leverage)
-                              const tpPrice = side === 'BUY' 
-                                ? entry * (1 + 0.25 / lev) 
-                                : entry * (1 - 0.25 / lev)
-                              handleAction('tp', {
-                                positionId: p.positionId,
-                                symbol: p.symbol,
-                                takeProfitPrice: tpPrice.toFixed(6)
-                              })
-                            }}
-                          >
-                            TP 25%
-                          </button>
-
                           <button
                             className="btn-close"
                             disabled={isBusy}
