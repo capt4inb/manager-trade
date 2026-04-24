@@ -193,6 +193,27 @@ app.post('/api/positions/close', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Action: Place Trade Order ────────────────────────────────────────────────
+app.post('/api/trade/place_order', async (req, res) => {
+  try {
+    const { symbol, side, orderType, qty, price } = req.body;
+    
+    const body = {
+      symbol,
+      side,
+      tradeSide: 'OPEN',
+      orderType,
+      qty: String(qty)
+    };
+    if (orderType === 'LIMIT' && price) {
+      body.price = String(price);
+    }
+    const data = await callBitunix('POST', '/api/v1/futures/trade/place_order', {}, body);
+    console.log('[ORDER]', symbol, side, data);
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n🚀 Bitunix API Server → http://localhost:${PORT}\n`);
