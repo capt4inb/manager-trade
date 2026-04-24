@@ -92,8 +92,9 @@ export default function App() {
         list.forEach(t => { tickMap[t.symbol] = t.lastPrice })
         setTickers(tickMap)
         
-        // Process top 50 by quoteVol
-        const sorted = [...list].sort((a, b) => parseFloat(b.quoteVol || 0) - parseFloat(a.quoteVol || 0))
+        // Process top 50 USDT by quoteVol
+        const usdtList = list.filter(t => (t.symbol || '').toUpperCase().endsWith('USDT'))
+        const sorted = [...usdtList].sort((a, b) => parseFloat(b.quoteVol || 0) - parseFloat(a.quoteVol || 0))
         setMarketData(sorted.slice(0, 50))
       }
 

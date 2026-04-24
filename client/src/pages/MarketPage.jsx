@@ -17,10 +17,44 @@ const fmtVol = (n) => {
 
 export default function MarketPage({ marketData }) {
   const [search, setSearch] = useState('')
+  const [sortConfig, setSortConfig] = useState({ key: 'quoteVol', direction: 'desc' })
 
-  const filtered = marketData.filter(m =>
+  const handleSort = (key) => {
+    let direction = 'desc'
+    if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = 'asc'
+    }
+    setSortConfig({ key, direction })
+  }
+
+  const sortedData = [...marketData].sort((a, b) => {
+    let aVal, bVal
+    if (sortConfig.key === 'symbol') {
+      aVal = a.symbol || ''
+      bVal = b.symbol || ''
+    } else if (sortConfig.key === 'change') {
+      const aOpen = parseFloat(a.open || 0), aLast = parseFloat(a.last || a.lastPrice || 0)
+      aVal = aOpen > 0 ? ((aLast - aOpen) / aOpen) * 100 : 0
+      const bOpen = parseFloat(b.open || 0), bLast = parseFloat(b.last || b.lastPrice || 0)
+      bVal = bOpen > 0 ? ((bLast - bOpen) / bOpen) * 100 : 0
+    } else {
+      aVal = parseFloat(a[sortConfig.key] ?? a.lastPrice ?? 0)
+      bVal = parseFloat(b[sortConfig.key] ?? b.lastPrice ?? 0)
+    }
+
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1
+    return 0
+  })
+
+  const filtered = sortedData.filter(m =>
     (m.symbol || '').toLowerCase().includes(search.toLowerCase())
   )
+
+  const SortIcon = ({ column }) => {
+    if (sortConfig.key !== column) return <span style={{ opacity: 0.3, marginLeft: 4 }}>↕</span>
+    return <span style={{ marginLeft: 4 }}>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+  }
 
   return (
     <div className="tab-page">
@@ -44,12 +78,12 @@ export default function MarketPage({ marketData }) {
             <thead>
               <tr>
                 <th>#</th>
-                <th>Symbol</th>
-                <th>Giá hiện tại</th>
-                <th>24h Thay đổi</th>
-                <th>24h Cao nhất</th>
-                <th>24h Thấp nhất</th>
-                <th>Volume (USDT)</th>
+                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('symbol')}>Symbol <SortIcon column="symbol"/></th>
+                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('lastPrice')}>Giá hiện tại <SortIcon column="lastPrice"/></th>
+                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('change')}>24h Thay đổi <SortIcon column="change"/></th>
+                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('high')}>24h Cao nhất <SortIcon column="high"/></th>
+                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('low')}>24h Thấp nhất <SortIcon column="low"/></th>
+                <th style={{ cursor: 'pointer' }} onClick={() => handleSort('quoteVol')}>Volume (USDT) <SortIcon column="quoteVol"/></th>
               </tr>
             </thead>
             <tbody>
