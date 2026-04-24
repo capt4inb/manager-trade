@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { toast } from '../App'
-import TradingChart from '../components/TradingChart'
 
 const fmt = (n, d = 4) => {
   const num = parseFloat(n)
@@ -23,7 +22,6 @@ const pnlFmt = v => {
 export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
   const [search, setSearch] = useState('')
   const [loadingAction, setLoadingAction] = useState(null)
-  const [selectedChart, setSelectedChart] = useState(null)
 
   const filtered = positions.filter(p =>
     (p.symbol || '').toLowerCase().includes(search.toLowerCase())
@@ -53,16 +51,6 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
 
   return (
     <div className="tab-page">
-      {selectedChart && (
-        <div className="panel" style={{ marginBottom: '20px', padding: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', padding: '0 10px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 700 }}>Biểu đồ {selectedChart}</h3>
-            <button className="btn-link" onClick={() => setSelectedChart(null)}>Đóng biểu đồ ✕</button>
-          </div>
-          <TradingChart symbol={selectedChart} interval="15m" />
-        </div>
-      )}
-
       <div className="section-head">
         <h2 className="section-title">
           Vị thế Future đang mở
@@ -102,10 +90,10 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
                 </tr>
               ) : (
                 filtered.map(p => {
-                  const side = (p.side || '').toUpperCase()
-                  const pnl = p.unrealizedPNL ?? 0
-                  const margin = p.margin ?? 1 // avoid div by zero
-                  const roe = ((parseFloat(pnl) / parseFloat(margin)) * 100).toFixed(2)
+                  const side = (p.side || p.positionSide || p.posSide || '').toUpperCase()
+                  const pnl = p.unrealizedPNL ?? p.unrealPnl ?? p.profit ?? 0
+                  const margin = parseFloat(p.margin ?? p.frozenAmount ?? p.initialMargin) || 1 // avoid div by zero
+                  const roe = ((parseFloat(pnl) / margin) * 100).toFixed(2)
                   const isBusy = loadingAction && loadingAction.startsWith(p.positionId)
 
                   return (
@@ -116,29 +104,22 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
                           {side === 'BUY' ? 'LONG' : 'SHORT'} {p.leverage}x
                         </span>
                       </td>
-                      <td>{fmt(p.qty)}</td>
-                      <td>{fmt(p.avgOpenPrice)}</td>
-                      <td>{fmt(p.markPrice ?? tickers[p.symbol])}</td>
+                      <td>{fmt(p.qty ?? p.size ?? p.total ?? p.holdVolume)}</td>
+                      <td>{fmt(p.avgOpenPrice ?? p.entryPrice ?? p.avgPrice ?? p.openPrice)}</td>
+                      <td>{fmt(p.markPrice ?? p.lastPrice ?? p.indexPrice ?? tickers[p.symbol])}</td>
                       <td className={pnlCls(pnl)}>
                         {pnlFmt(pnl)} USDT ({roe}%)
                       </td>
-                      <td>{fmt(p.margin, 2)}</td>
+                      <td>{fmt(p.margin ?? p.frozenAmount ?? p.initialMargin, 2)}</td>
                       <td>
                         <div className="action-group">
-                          <button
-                            className="btn-be"
-                            style={{ background: 'rgba(59, 130, 246, 0.15)', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#3b82f6' }}
-                            onClick={() => setSelectedChart(p.symbol === selectedChart ? null : p.symbol)}
-                          >
-                            Chart
-                          </button>
                           <button
                             className="btn-be"
                             disabled={isBusy}
                             onClick={() => handleAction('be', {
                               positionId: p.positionId,
                               symbol: p.symbol,
-                              avgOpenPrice: p.avgOpenPrice
+                              avgOpenPrice: p.avgOpenPrice ?? p.entryPrice ?? p.avgPrice ?? p.openPrice
                             })}
                           >
                             BE
@@ -149,7 +130,7 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
                             className="btn-tp"
                             disabled={isBusy}
                             onClick={() => {
-                              const entry = parseFloat(p.avgOpenPrice)
+                              const entry = parseFloat(p.avgOpenPrice ?? p.entryPrice ?? p.avgPrice ?? p.openPrice)
                               const lev = parseFloat(p.leverage)
                               // TP Price calculation for 10% ROE
                               // ROE = ((Price - Entry) / Entry) * Lev
@@ -171,7 +152,7 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
                             className="btn-tp"
                             disabled={isBusy}
                             onClick={() => {
-                              const entry = parseFloat(p.avgOpenPrice)
+                              const entry = parseFloat(p.avgOpenPrice ?? p.entryPrice ?? p.avgPrice ?? p.openPrice)
                               const lev = parseFloat(p.leverage)
                               const tpPrice = side === 'BUY' 
                                 ? entry * (1 + 0.25 / lev) 

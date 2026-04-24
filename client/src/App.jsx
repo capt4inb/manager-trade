@@ -110,17 +110,19 @@ export default function App() {
   }, [autoRefresh, fetchAll])
 
   // ── Account derived values ──────────────────────────────────────────────────
-  const available  = account?.available  ?? '--'
-  const frozen     = account?.frozen     ?? '--'
-  const margin     = account?.margin     ?? '--'
-  const crossPnl   = account?.crossUnrealizedPNL ?? '--'
+  const available  = account?.available ?? account?.availableBalance ?? account?.availAmt ?? account?.crossedAvailableBalance ?? '--'
+  const frozen     = account?.frozen ?? account?.usedMargin ?? account?.crossedPositionInitialMargin ?? account?.initialMargin ?? '--'
+  const margin     = account?.margin ?? account?.frozen ?? account?.crossedMarginBalance ?? '--'
+  const crossPnl   = account?.crossUnrealizedPNL ?? account?.unrealizedPNL ?? account?.unrealPnl ?? account?.crossedUnrealizedPNL ?? '--'
   const isooPnl    = account?.isolationUnrealizedPNL ?? 0
   const totalUPnl  = crossPnl !== '--'
     ? (parseFloat(crossPnl) + parseFloat(isooPnl || 0)).toFixed(4)
     : '--'
-  const equity = available !== '--' && margin !== '--'
-    ? (parseFloat(available) + parseFloat(margin) + parseFloat(totalUPnl || 0)).toFixed(4)
-    : '--'
+  const equity = account?.equity ?? account?.totalEquity ?? account?.crossedAccountEquity ?? (
+    available !== '--' && margin !== '--'
+      ? (parseFloat(available) + parseFloat(margin) + parseFloat(totalUPnl || 0)).toFixed(4)
+      : '--'
+  )
 
   const TABS = [
     { id: 'positions', label: 'Vị thế mở',   Icon: IconChart, badge: positions.length },

@@ -25,6 +25,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve the React frontend
+app.use(express.static(path.join(__dirname, 'client/dist')));
+
 // ── Crypto helpers ──────────────────────────────────────────────────────────
 function sha256(str) {
   return crypto.createHash('sha256').update(str, 'utf8').digest('hex');
@@ -134,19 +137,7 @@ app.get('/api/tickers', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Market Kline (Chart data)
-app.get('/api/market/kline', async (req, res) => {
-  try {
-    const { symbol, interval, limit } = req.query;
-    const params = {
-      symbol: symbol || 'BTCUSDT',
-      interval: interval || '15m',
-      limit: limit || 100
-    };
-    const data = await callBitunix('GET', '/api/v1/futures/market/kline', params);
-    res.json(data);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
+
 
 // ── Action: BE (Break Even) ──────────────────────────────────────────────────
 // Sets stop-loss at entry price for a position

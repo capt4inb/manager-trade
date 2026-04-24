@@ -50,7 +50,7 @@ export default function HistoryPage({ history, trades }) {
                   <tr><td colSpan="7" className="center-state">Không có lịch sử khớp lệnh</td></tr>
                 ) : (
                   trades.map((t, idx) => {
-                    const pnl = parseFloat(t.realizedPNL || 0)
+                    const pnl = parseFloat(t.realizedPNL ?? t.profit ?? 0)
                     return (
                       <tr key={idx}>
                         <td className="sans" style={{ fontWeight: 700 }}>{t.symbol}</td>
@@ -59,12 +59,12 @@ export default function HistoryPage({ history, trades }) {
                             {(t.side || '').toUpperCase()}
                           </span>
                         </td>
-                        <td>{fmt(t.qty || t.size, 4)}</td>
-                        <td>{fmt(t.price || t.avgFillPrice, 4)}</td>
+                        <td>{fmt(t.qty ?? t.size, 4)}</td>
+                        <td>{fmt(t.price ?? t.tradePrice ?? t.avgFillPrice, 4)}</td>
                         <td className={pnl > 0 ? 'green' : pnl < 0 ? 'red' : ''}>
                           {pnl > 0 ? '+' : ''}{fmt(pnl)}
                         </td>
-                        <td className="dim">{fmt(t.fee, 4)}</td>
+                        <td className="dim">{fmt(t.fee ?? t.tradeFee, 4)}</td>
                         <td className="dim" style={{ fontSize: '11px' }}>
                           {new Date(Number(t.createTime || t.tradeTime)).toLocaleString('vi-VN')}
                         </td>
@@ -81,8 +81,10 @@ export default function HistoryPage({ history, trades }) {
                   <th>Symbol</th>
                   <th>Hướng</th>
                   <th>Loại</th>
+                  <th>Số lượng</th>
                   <th>Giá</th>
                   <th>Giá TB</th>
+                  <th>Đã khớp</th>
                   <th>Trạng thái</th>
                   <th>Thời gian</th>
                 </tr>
@@ -99,9 +101,11 @@ export default function HistoryPage({ history, trades }) {
                           {(o.side || '').toUpperCase()}
                         </span>
                       </td>
-                      <td className="dim">{o.orderType}</td>
+                      <td className="dim">{o.orderType || 'LIMIT'}</td>
+                      <td>{fmt(o.qty ?? o.size, 4)}</td>
                       <td>{fmt(o.price, 4)}</td>
-                      <td>{fmt(o.avgPrice || o.avgFillPrice, 4)}</td>
+                      <td>{fmt(o.avgPrice ?? o.avgFillPrice, 4)}</td>
+                      <td>{fmt(o.filledQty ?? o.executedQty ?? 0, 4)}</td>
                       <td>
                         <span className={`badge ${o.status === 'FILLED' ? 'b-filled' : 'b-cancel'}`}>
                           {o.status}

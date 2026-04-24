@@ -64,7 +64,7 @@ export default function OrdersPage({ orders }) {
                     <td className="dim">{o.orderType || 'LIMIT'}</td>
                     <td>{fmt(o.qty ?? o.size)}</td>
                     <td>{fmt(o.price)}</td>
-                    <td>{fmt(o.filledQty ?? 0)}</td>
+                    <td>{fmt(o.filledQty ?? o.executedQty ?? 0)}</td>
                     <td>
                       <span className="badge b-partial">{o.status}</span>
                     </td>
