@@ -3,7 +3,8 @@ import './App.css'
 import PositionsPage from './pages/PositionsPage'
 import OrdersPage   from './pages/OrdersPage'
 import HistoryPage  from './pages/HistoryPage'
-import { IconChart, IconList, IconClock, IconRefresh, IconBolt } from './components/Icons'
+import MarketPage   from './pages/MarketPage'
+import { IconChart, IconList, IconClock, IconRefresh, IconBolt, IconGlobe } from './components/Icons'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n, d = 2) => {
@@ -30,6 +31,7 @@ export default function App() {
   const [positions, setPositions] = useState([])
   const [orders,    setOrders]    = useState([])
   const [tickers,   setTickers]   = useState({})
+  const [marketData, setMarketData] = useState([])
   const [history,   setHistory]   = useState([])
   const [trades,    setTrades]    = useState([])
   const [connected, setConnected] = useState(null)
@@ -89,6 +91,10 @@ export default function App() {
         const list = tickRes.value.data || []
         list.forEach(t => { tickMap[t.symbol] = t.lastPrice })
         setTickers(tickMap)
+        
+        // Process top 50 by quoteVol
+        const sorted = [...list].sort((a, b) => parseFloat(b.quoteVol || 0) - parseFloat(a.quoteVol || 0))
+        setMarketData(sorted.slice(0, 50))
       }
 
       setLastUpdate(new Date().toLocaleTimeString('vi-VN'))
@@ -125,6 +131,7 @@ export default function App() {
   )
 
   const TABS = [
+    { id: 'market',    label: 'Thị trường',   Icon: IconGlobe },
     { id: 'positions', label: 'Vị thế mở',   Icon: IconChart, badge: positions.length },
     { id: 'orders',    label: 'Lệnh chờ',     Icon: IconList,  badge: orders.length, cls: 'yellow' },
     { id: 'history',   label: 'Lịch sử lệnh', Icon: IconClock },
@@ -232,6 +239,9 @@ export default function App() {
           </div>
 
           {/* Tab pages */}
+          {tab === 'market' && (
+            <MarketPage marketData={marketData} />
+          )}
           {tab === 'positions' && (
             <PositionsPage positions={positions} tickers={tickers} onRefresh={fetchAll} />
           )}
