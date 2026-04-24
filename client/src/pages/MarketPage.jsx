@@ -44,13 +44,22 @@ export default function MarketPage({ marketData }) {
     setIsTrading(true)
     try {
       const execPrice = orderType === 'LIMIT' ? parseFloat(limitPrice) : parseFloat(tradeModal.price)
-      const qty = (parseFloat(margin) * parseFloat(leverage)) / execPrice
+      
+      const calcQty = (m, l, p) => {
+        const q = (parseFloat(m) * parseFloat(l)) / parseFloat(p);
+        if (p > 1000) return q.toFixed(3);
+        if (p > 10) return q.toFixed(2);
+        if (p > 0.1) return q.toFixed(1);
+        return q.toFixed(0);
+      }
+      
+      const qtyStr = calcQty(margin, leverage, execPrice);
 
       const body = {
         symbol: tradeModal.symbol,
         side,
         orderType,
-        qty: qty.toFixed(3) // Ensure stable decimal for qty
+        qty: qtyStr
       }
       if (orderType === 'LIMIT') body.price = execPrice.toFixed(6)
 
@@ -221,21 +230,33 @@ export default function MarketPage({ marketData }) {
               </div>
             )}
 
-            <div style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
-              <div style={{ flex: 2 }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#94a3b8' }}>Ký quỹ / Margin (USDT)</label>
-                <input 
-                  type="number" className="search-box" style={{ width: '100%', boxSizing: 'border-box' }} placeholder="Ví dụ: 10"
-                  value={margin} onChange={e => setMargin(e.target.value)}
-                />
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: '#94a3b8' }}>
+                <span>Đòn bẩy hiện tại ({leverage}x)</span>
+                <span style={{ color: leverage > 50 ? '#ef4444' : '#3b82f6' }}>{leverage > 50 ? 'Rủi ro cao' : ''}</span>
+              </label>
+              <input 
+                type="range" min="1" max="125" step="1" 
+                value={leverage} onChange={e => setLeverage(e.target.value)}
+                style={{ width: '100%', cursor: 'pointer', accentColor: leverage > 50 ? '#ef4444' : '#3b82f6' }}
+              />
+              <div style={{ display: 'flex', gap: '5px', marginTop: '8px' }}>
+                {[10, 20, 50, 100].map(x => (
+                  <button 
+                    key={x}
+                    style={{ flex: 1, padding: '4px', fontSize: '11px', background: leverage == x ? '#3b82f6' : 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    onClick={() => setLeverage(x)}
+                  >{x}x</button>
+                ))}
               </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#94a3b8' }}>Đòn bẩy (x)</label>
-                <input 
-                  type="number" className="search-box" style={{ width: '100%', boxSizing: 'border-box' }}
-                  value={leverage} onChange={e => setLeverage(e.target.value)}
-                />
-              </div>
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#94a3b8' }}>Ký quỹ / Margin (USDT)</label>
+              <input 
+                type="number" className="search-box" style={{ width: '100%', boxSizing: 'border-box', fontSize: '16px', padding: '10px' }} placeholder="Ví dụ: 10"
+                value={margin} onChange={e => setMargin(e.target.value)}
+              />
             </div>
 
             <div style={{ marginBottom: '20px', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '4px', fontSize: '12px', color: '#94a3b8' }}>
