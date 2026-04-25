@@ -236,8 +236,8 @@
   border-top: 1px solid rgba(255,255,255,0.1);
 }
 .summary-item-mini { display: flex; flex-direction: column; gap: 4px; }
-.summary-label { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.summary-val-mini { font-size: 14px; font-weight: 700; color: var(--text-white); font-family: var(--mono); }
+.summary-label { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+.summary-val-mini { font-size: 18px; font-weight: 800; color: var(--text-white); font-family: var(--mono); line-height: 1.2; }
 .summary-val-mini.green { color: var(--green); }
 .summary-val-mini.red { color: var(--red); }
 

@@ -114,6 +114,9 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
           <span className="count-badge">{positions.length}</span>
         </h2>
         <div className="section-actions" style={{ display: 'flex', gap: '8px' }}>
+          <button className="sidebar-btn" style={{ padding: '8px', width: 'auto' }} onClick={onRefresh}>
+            <IconRefresh style={{ width: 18 }} />
+          </button>
           <button 
             className="btn-close" 
             style={{ background: 'var(--red)', color: '#fff', fontSize: '11px', padding: '8px 12px' }}
@@ -121,9 +124,6 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
             onClick={handleCloseAll}
           >
             Đóng tất cả ({positions.length})
-          </button>
-          <button className="sidebar-btn" style={{ padding: '8px', width: 'auto' }} onClick={onRefresh}>
-            <IconRefresh style={{ width: 18 }} />
           </button>
         </div>
       </div>
@@ -133,8 +133,7 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
           <table className="tbl">
             <thead>
               <tr>
-                <th className="sort-header" onClick={() => requestSort('symbol')}>Symbol</th>
-                <th>Hướng</th>
+                <th className="sort-header" onClick={() => requestSort('symbol')}>Symbol / Hướng</th>
                 <th className="sort-header" onClick={() => requestSort('size')}>Kích thước</th>
                 <th>Giá vào / Mark</th>
                 <th className="sort-header" onClick={() => requestSort('liq')}>Giá Liq. / Khoảng cách</th>
@@ -145,7 +144,7 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
             <tbody>
               {sortedList.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="center-state">
+                  <td colSpan="6" className="center-state">
                     <div style={{ opacity: 0.5, marginBottom: '10px' }}>
                       <IconInfo style={{ width: 48, height: 48 }} />
                     </div>
@@ -174,8 +173,8 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
 
                   return (
                     <tr key={p.positionId}>
-                      <td className="sans" style={{ fontWeight: 700 }}>{p.symbol}</td>
                       <td>
+                        <div style={{ fontWeight: 700, marginBottom: '4px' }}>{p.symbol}</div>
                         <span className={`badge badge-with-icon ${isLong ? 'b-long' : 'b-short'}`}>
                           {isLong ? <IconArrowUp /> : <IconArrowUp style={{ transform: 'rotate(180deg)' }} />}
                           {isLong ? 'LONG' : 'SHORT'} {p.leverage}x

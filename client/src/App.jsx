@@ -144,7 +144,7 @@ export default function App() {
           </div>
           <div className="balance-val">$ {equity !== '--' ? fmt(equity) : '--'}</div>
           
-          <div className="header-summary-grid">
+          <div className="header-summary-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
             <div className="summary-item-mini">
               <span className="summary-label">unPnl</span>
               <div className={`summary-val-mini ${parseFloat(totalUPnl) >= 0 ? 'green' : 'red'}`}>
@@ -158,15 +158,6 @@ export default function App() {
             <div className="summary-item-mini">
               <span className="summary-label">Positions</span>
               <div className="summary-val-mini">{positions.length}</div>
-            </div>
-            <div className="summary-item-mini">
-              <span className="summary-label">Risk</span>
-              <div className="dist-bar-container" style={{ width: '60px', height: '6px', margin: '4px 0' }}>
-                <div 
-                  className={`dist-bar-fill ${positions.length > 5 ? 'danger' : 'safe'}`}
-                  style={{ width: `${Math.min(100, positions.length * 15)}%` }}
-                />
-              </div>
             </div>
           </div>
         </header>
