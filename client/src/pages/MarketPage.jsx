@@ -29,7 +29,7 @@ const CoinIcon = ({ symbol }) => {
   )
 }
 
-export default function MarketPage({ marketData }) {
+export default function MarketPage({ marketData, loading }) {
   const [search, setSearch] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: 'quoteVol', direction: 'desc' })
   
@@ -154,7 +154,23 @@ export default function MarketPage({ marketData }) {
       </div>
 
       <div className="list-container">
-        {filtered.length === 0 ? (
+        {loading && marketData.length === 0 ? (
+          Array(10).fill(0).map((_, i) => (
+            <div className="list-item" key={i} style={{ cursor: 'default' }}>
+              <div className="item-left">
+                <div className="item-icon skeleton-box" style={{ width: '44px', height: '44px' }}></div>
+                <div>
+                  <div className="skeleton-box" style={{ width: '60px', height: '16px', marginBottom: '6px' }}></div>
+                  <div className="skeleton-box" style={{ width: '40px', height: '10px' }}></div>
+                </div>
+              </div>
+              <div className="item-right">
+                <div className="skeleton-box" style={{ width: '80px', height: '16px', marginBottom: '6px' }}></div>
+                <div className="skeleton-box" style={{ width: '40px', height: '12px' }}></div>
+              </div>
+            </div>
+          ))
+        ) : filtered.length === 0 ? (
           <div className="center-state">Không có kết quả</div>
         ) : (
           filtered.map(m => {

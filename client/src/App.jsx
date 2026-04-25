@@ -109,6 +109,7 @@ export default function App() {
   const crossPnl   = account?.crossUnrealizedPNL ?? account?.unrealizedPNL ?? account?.unrealPnl ?? account?.crossedUnrealizedPNL ?? '--'
   const isooPnl    = account?.isolationUnrealizedPNL ?? 0
   const totalUPnl  = crossPnl !== '--' ? (parseFloat(crossPnl) + parseFloat(isooPnl || 0)).toFixed(4) : '--'
+  const totalMargin = positions.reduce((acc, p) => acc + (parseFloat(p.margin ?? p.initialMargin) || 0), 0)
   const equity = account?.equity ?? account?.totalEquity ?? account?.crossedAccountEquity ?? (
     available !== '--' && margin !== '--' ? (parseFloat(available) + parseFloat(margin) + parseFloat(totalUPnl || 0)).toFixed(4) : '--'
   )
@@ -142,12 +143,32 @@ export default function App() {
             <div className="header-avatar"><IconUser /></div>
           </div>
           <div className="balance-val">$ {equity !== '--' ? fmt(equity) : '--'}</div>
-          {totalUPnl !== '--' && (
-            <div className={`balance-sub ${parseFloat(totalUPnl) >= 0 ? 'green' : 'red'}`}>
-              {parseFloat(totalUPnl) >= 0 ? <IconArrowUp /> : <IconArrowUp style={{ transform: 'rotate(180deg)' }} />}
-              $ {Math.abs(parseFloat(totalUPnl)).toFixed(2)} unPnl
+          
+          <div className="header-summary-grid">
+            <div className="summary-item-mini">
+              <span className="summary-label">unPnl</span>
+              <div className={`summary-val-mini ${parseFloat(totalUPnl) >= 0 ? 'green' : 'red'}`}>
+                {parseFloat(totalUPnl) >= 0 ? '+' : ''}{parseFloat(totalUPnl || 0).toFixed(2)}
+              </div>
             </div>
-          )}
+            <div className="summary-item-mini">
+              <span className="summary-label">Margin</span>
+              <div className="summary-val-mini">{fmt(totalMargin, 2)}</div>
+            </div>
+            <div className="summary-item-mini">
+              <span className="summary-label">Positions</span>
+              <div className="summary-val-mini">{positions.length}</div>
+            </div>
+            <div className="summary-item-mini">
+              <span className="summary-label">Risk</span>
+              <div className="dist-bar-container" style={{ width: '60px', height: '6px', margin: '4px 0' }}>
+                <div 
+                  className={`dist-bar-fill ${positions.length > 5 ? 'danger' : 'safe'}`}
+                  style={{ width: `${Math.min(100, positions.length * 15)}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </header>
 
         {/* Horizontal Scroll Cards (Show active positions if any, otherwise skip) */}
@@ -178,10 +199,10 @@ export default function App() {
 
         {/* Page Content */}
         <div className="page" style={{ paddingTop: positions.length > 0 ? '0px' : '20px' }}>
-          {tab === 'market' && <MarketPage marketData={marketData} />}
-          {tab === 'positions' && <PositionsPage positions={positions} tickers={tickers} onRefresh={fetchAll} />}
-          {tab === 'orders' && <OrdersPage orders={orders} />}
-          {tab === 'history' && <HistoryPage history={history} trades={trades} />}
+          {tab === 'market' && <MarketPage marketData={marketData} loading={loading} />}
+          {tab === 'positions' && <PositionsPage positions={positions} tickers={tickers} onRefresh={fetchAll} loading={loading} />}
+          {tab === 'orders' && <OrdersPage orders={orders} loading={loading} />}
+          {tab === 'history' && <HistoryPage history={history} trades={trades} loading={loading} />}
         </div>
       </div>
 
