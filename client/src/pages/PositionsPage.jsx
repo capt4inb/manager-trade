@@ -108,18 +108,18 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
 
   return (
     <div className="tab-page">
-      <div className="section-head">
-        <h2 className="section-title">
+      <div className="section-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 className="section-title" style={{ marginBottom: 0 }}>
           Vị thế Future đang mở
           <span className="count-badge">{positions.length}</span>
         </h2>
-        <div className="section-actions" style={{ display: 'flex', gap: '8px' }}>
+        <div className="section-actions" style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
           <button className="sidebar-btn" style={{ padding: '8px', width: 'auto' }} onClick={onRefresh}>
             <IconRefresh style={{ width: 18 }} />
           </button>
           <button 
             className="btn-close" 
-            style={{ background: 'var(--red)', color: '#fff', fontSize: '11px', padding: '8px 12px' }}
+            style={{ background: 'var(--red)', color: '#fff', fontSize: '12px', padding: '10px 16px', fontWeight: '700' }}
             disabled={loadingAction === 'all-close' || positions.length === 0}
             onClick={handleCloseAll}
           >

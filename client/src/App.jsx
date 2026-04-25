@@ -123,17 +123,23 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* Desktop Sidebar */}
-      <aside className="sidebar">
-        <div className="brand">Bitunix Pro</div>
-        {TABS.map(t => (
-          <button key={t.id} className={`sidebar-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
-            <t.Icon style={{ width: 18, height: 18 }} />
-            {t.label}
-          </button>
-        ))}
-        {connected === false && <div style={{ color: 'var(--red)', marginTop: 'auto', fontSize: 12 }}>Connection Error</div>}
-      </aside>
+      {/* Top Navbar */}
+      <nav className="navbar">
+        <div className="navbar-left">
+          <div className="brand">Bitunix Pro</div>
+        </div>
+        <div className="navbar-center">
+          {TABS.map(t => (
+            <button key={t.id} className={`navbar-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+              <t.Icon style={{ width: 18, height: 18 }} />
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
+        <div className="navbar-right">
+          {connected === false && <div style={{ color: 'var(--red)', fontSize: 11 }}>Disconnected</div>}
+        </div>
+      </nav>
 
       <div className="main">
         {/* Top Header */}
