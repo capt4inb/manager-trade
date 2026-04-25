@@ -4,6 +4,13 @@ import {
   IconAlertTriangle, IconInfo, IconChevronDown, IconArrowUp,
   IconRefresh
 } from '../components/Icons'
+import coinsMetadata from '../data/coins_metadata.json'
+
+// Create a map for quick lookups
+const metadataMap = {}
+coinsMetadata.coins.forEach(c => {
+  metadataMap[c.symbol] = c
+})
 
 const fmt = (n, d = 4) => {
   const num = parseFloat(n)
@@ -174,7 +181,19 @@ export default function PositionsPage({ positions, tickers = {}, onRefresh }) {
                   return (
                     <tr key={p.positionId}>
                       <td>
-                        <div style={{ fontWeight: 700, marginBottom: '4px' }}>{p.symbol}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ fontWeight: 700 }}>{p.symbol}</div>
+                          {metadataMap[p.symbol.replace('USDT', '')] && (
+                            <span className="coin-full-name" style={{ fontSize: '10px' }}>
+                              ({metadataMap[p.symbol.replace('USDT', '')].name})
+                            </span>
+                          )}
+                        </div>
+                        <div className="tag-list" style={{ marginBottom: '6px' }}>
+                          {metadataMap[p.symbol.replace('USDT', '')]?.tags.map(t => (
+                            <span key={t} className="coin-tag">{t}</span>
+                          ))}
+                        </div>
                         <span className={`badge badge-with-icon ${isLong ? 'b-long' : 'b-short'}`}>
                           {isLong ? <IconArrowUp /> : <IconArrowUp style={{ transform: 'rotate(180deg)' }} />}
                           {isLong ? 'LONG' : 'SHORT'} {p.leverage}x

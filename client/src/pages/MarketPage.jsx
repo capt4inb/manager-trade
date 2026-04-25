@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { toast } from '../App'
+import coinsMetadata from '../data/coins_metadata.json'
 
 const fmt = (n, d = 4) => {
   const num = parseFloat(n)
@@ -15,6 +16,12 @@ const fmtVol = (n) => {
   if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K'
   return num.toFixed(2)
 }
+
+// Create a map for quick lookups
+const metadataMap = {}
+coinsMetadata.coins.forEach(c => {
+  metadataMap[c.symbol] = c
+})
 
 const CoinIcon = ({ symbol }) => {
   const coin = symbol.replace('USDT', '').toLowerCase()
@@ -103,35 +110,50 @@ export default function MarketPage({ marketData, loading }) {
     setSortConfig({ key, direction })
   }
 
-  const sortedData = [...marketData].sort((a, b) => {
-    let aVal, bVal
-    if (sortConfig.key === 'symbol') {
-      aVal = a.symbol || ''
-      bVal = b.symbol || ''
-    } else if (sortConfig.key === 'change') {
-      const aOpen = parseFloat(a.open || 0), aLast = parseFloat(a.last || a.lastPrice || 0)
-      aVal = aOpen > 0 ? ((aLast - aOpen) / aOpen) * 100 : 0
-      const bOpen = parseFloat(b.open || 0), bLast = parseFloat(b.last || b.lastPrice || 0)
-      bVal = bOpen > 0 ? ((bLast - bOpen) / bOpen) * 100 : 0
-    } else {
-      aVal = parseFloat(a[sortConfig.key] ?? a.lastPrice ?? 0)
-      bVal = parseFloat(b[sortConfig.key] ?? b.lastPrice ?? 0)
+  const sortedAndFiltered = useMemo(() => {
+    let list = [...marketData]
+    
+    // Filter
+    if (search) {
+      const s = search.toLowerCase()
+      list = list.filter(m => {
+        const symbol = (m.symbol || '').toLowerCase()
+        const meta = metadataMap[m.symbol.replace('USDT', '')] || {}
+        const name = (meta.name || '').toLowerCase()
+        const tags = (meta.tags || []).join(' ').toLowerCase()
+        return symbol.includes(s) || name.includes(s) || tags.includes(s)
+      })
     }
 
-    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1
-    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1
-    return 0
-  })
+    // Sort
+    list.sort((a, b) => {
+      let aVal, bVal
+      if (sortConfig.key === 'symbol') {
+        aVal = a.symbol || ''
+        bVal = b.symbol || ''
+      } else if (sortConfig.key === 'change') {
+        const aOpen = parseFloat(a.open || 0), aLast = parseFloat(a.last || a.lastPrice || 0)
+        aVal = aOpen > 0 ? ((aLast - aOpen) / aOpen) * 100 : 0
+        const bOpen = parseFloat(b.open || 0), bLast = parseFloat(b.last || b.lastPrice || 0)
+        bVal = bOpen > 0 ? ((bLast - bOpen) / bOpen) * 100 : 0
+      } else {
+        aVal = parseFloat(a[sortConfig.key] ?? a.lastPrice ?? 0)
+        bVal = parseFloat(b[sortConfig.key] ?? b.lastPrice ?? 0)
+      }
 
-  const filtered = sortedData.filter(m =>
-    (m.symbol || '').toLowerCase().includes(search.toLowerCase())
-  )
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    return list
+  }, [marketData, search, sortConfig])
 
   return (
     <div>
       <input
         className="search-box"
-        placeholder="Tìm symbol..."
+        placeholder="Tìm symbol, tên hoặc tag (AI, Meme...)"
         value={search}
         onChange={e => setSearch(e.target.value)}
       />
@@ -170,10 +192,10 @@ export default function MarketPage({ marketData, loading }) {
               </div>
             </div>
           ))
-        ) : filtered.length === 0 ? (
+        ) : sortedAndFiltered.length === 0 ? (
           <div className="center-state">Không có kết quả</div>
         ) : (
-          filtered.map(m => {
+          sortedAndFiltered.map(m => {
             const open = parseFloat(m.open || 0)
             const last = parseFloat(m.last || m.lastPrice || 0)
             const change = open > 0 ? ((last - open) / open) * 100 : 0
@@ -183,8 +205,20 @@ export default function MarketPage({ marketData, loading }) {
                 <div className="item-left">
                   <CoinIcon symbol={m.symbol} />
                   <div>
-                    <div className="item-name">{m.symbol.replace('USDT', '')}</div>
-                    <div className="item-sub">Vol {fmtVol(m.quoteVol)}</div>
+                    <div className="item-name">
+                      {m.symbol.replace('USDT', '')}
+                      {metadataMap[m.symbol.replace('USDT', '')] && (
+                        <span className="coin-full-name">
+                          {metadataMap[m.symbol.replace('USDT', '')].name}
+                        </span>
+                      )}
+                    </div>
+                    <div className="tag-list">
+                      {metadataMap[m.symbol.replace('USDT', '')]?.tags.map(t => (
+                        <span key={t} className="coin-tag">{t}</span>
+                      ))}
+                      {!metadataMap[m.symbol.replace('USDT', '')] && <span className="item-sub">Vol {fmtVol(m.quoteVol)}</span>}
+                    </div>
                   </div>
                 </div>
                 
